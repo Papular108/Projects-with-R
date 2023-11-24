@@ -1,0 +1,69 @@
+---
+title: "Test"
+author: "Popular Bhattarai"
+date: "2023-06-14"
+output: html_document
+---
+```{r}
+library(pdftools)
+library(tm)
+getwd()
+
+setwd( "C:/Users/N.D/Documents/MDS503P1")
+pdf_files <- list.files(pattern = "*.pdf")
+pdf_files
+pdf_text <- lapply(pdf_files,pdf_text)
+#Use of Corpus(): 
+corpus <- Corpus(VectorSource(unlist(pdf_text)))
+str(corpus)
+inspect(corpus[1:1])
+#Make All word to Lowercase
+corpus <- tm_map(corpus,content_transformer(tolower))
+inspect(corpus[1:1])
+#Remove Numbers
+corpus <- tm_map(corpus,removeNumbers)
+#Remove Punctuation
+corpus <- tm_map(corpus,removePunctuation)
+#strip White space
+corpus <- tm_map(corpus, stripWhitespace)
+inspect(corpus[1:1])
+
+corpus <- tm_map(corpus,removeWords, stopwords("english"))
+# Removes URLs from the text in the corpus. 
+corpus <- tm_map(corpus,content_transformer(function(x) gsub("http[^[:space:]]*","",x)))
+# Removes newline characters (\n) from the text in the corpus.
+corpus <- tm_map(corpus,content_transformer(function(x) gsub("\\n*","",x)))
+#Removes the en dash character (–) from the text in the corpus.
+corpus <- tm_map(corpus,content_transformer(function(x) gsub("–","",x)))
+#Removes the minus sign character (−) from the text in the corpus
+corpus <- tm_map(corpus,content_transformer(function(x) gsub("−","",x)))
+inspect(corpus[1:1])
+
+#creates a term-document matrix (TDM) from a corpus object in R using the tm package.
+
+tdm <- TermDocumentMatrix(corpus,control = list(wordLength=c(1,Inf)))
+freq_term <- findFreqTerms(tdm,lowfreq = 20)
+freq_term
+m <- as.matrix(tdm)
+freq_count <- sort(rowSums(m),decreasing = T)
+head(freq_count,20)
+library(wordcloud)
+par(mar = c(4,3,4,4))
+#generating a word cloud visualization in R using the wordcloud() function from the wordcloud package.
+wordcloud(words = names(freq_count), freq = freq_count, min.freq = 20, random.order = FALSE)
+wordcloud(words = names(freq_count), freq = freq_count, min.freq = 20, random.order=FALSE,colors = rainbow(length(freq_count)))
+library(igraph)
+# code calculates the correlation matrix for a matrix m in R and assigns it to the variable cor_matrix.
+cor_matrix <- cor(t(m))
+dim(cor_matrix)
+#The provided code creates a subset of the cor_matrix by selecting the first 100 rows and the first 100 columns
+papular<- cor_matrix[1:100,1:100]
+dim(papular)
+g <- graph.adjacency(papular,weighted = TRUE, mode = "undirected")
+plot(g)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
